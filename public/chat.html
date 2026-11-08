@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./responsivo.css">
+    <script src="./auth.js"></script>
+</head>
+<body>
+    <nav class="menu">
+        <a class="link" href="index.html">Home</a>
+        <a class="link" href="galeria.html">Galeria</a>
+        <a class="link" href="chat.html">Chat</a>
+        <a class="link" href="login.html">Login</a>
+        <a class="link" href="cadastro.html">Cadastro</a>
+    </nav>
+
+    <main class="container-chat">
+      <h2 id="boasVindas"> Chat do Jarvis</h2>
+        
+            <input class="inserir" type="text" id="mensagem" placeholder="Digite sua mensagem..." aria-label="Digite sua mensagem" autocomplete="off" required>
+            <button class="bpt-chat" id="btnEnviar" >Enviar</button>
+            <div id="caixaChat"></div>
+            
+      
+    </main>
+
+    <footer>
+        <p>©Site desenvolvido pelo aluno Icaro do CEEP / 2026 Curitiba</p>
+    </footer>
+
+    <script>
+const usuarioLogado = localStorage.getItem('nomeUsuario') || 'Visitante'
+
+document.querySelector('#boasVindas').textContent=`Olá ${usuarioLogado}, seja bem vindo`
+const caixaChat=document.querySelector('#caixaChat')
+const inputMensagem=document.querySelector('#mensagem')
+const btnEnviar=document.querySelector('#btnEnviar')
+
+const historicoConversa=[ ]
+
+function mensagemTela (autor, texto){
+
+    const textoFinal=document.createElement('p')
+    textoFinal.className='msg'
+    textoFinal.textContent=`${autor}, ${texto}`
+    caixaChat.appendChild(textoFinal)}
+
+btnEnviar.addEventListener('click', async()=>{
+    const textoMensagem=inputMensagem.value.trim()
+
+    if (!textoMensagem)return
+
+    mensagemTela(usuarioLogado, textoMensagem)
+    historicoConversa.push({role:"user", content:textoMensagem})
+
+    inputMensagem.value=''
+    btnEnviar.disabled=true
+
+    try{
+        const respostaServidor= await fetch('/chat', {
+            method:'POST',
+            headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ historico: historicoConversa, nomeUsuario: usuarioLogado })
+        })
+
+        const dados=  await respostaServidor.json()
+        if (!respostaServidor.ok) {
+
+       
+        mensagemTela('system',dados.erro )
+        return}
+
+        mensagemTela('',dados.resposta )
+    }
+
+
+    catch(erro){
+        mensagemTela('Sistema', 'Erro ao conectar com o servidor')
+    }
+    finally{
+        btnEnviar.disabled=false
+    }
+
+})
+
+
+</script>

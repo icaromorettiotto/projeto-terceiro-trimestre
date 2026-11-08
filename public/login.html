@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>login</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./responsivo.css">
+    <script src="./auth.js"></script>
+</head>
+
+<body>
+    <nav class="menu">
+        <a class="link" href="index.html">Home</a>
+        <a class="link" href="galeria.html">Galeria</a>
+        <a class="link" href="chat.html">Chat</a>
+        <a class="link" href="login.html">Login</a>
+        <a class="link" href="cadastro.html">Cadastro</a>
+    </nav>
+    
+    <div class="conteiner-cadastro">
+        <div class="conteiner-ch1">
+            <h2>Login</h2>
+        </div>
+
+        <div class="login">
+            <label for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" placeholder="Digite seu e-mail" required>
+
+            <label for="loginSenha">Senha</label>
+            <input type="password" id="loginSenha" placeholder="Digite sua senha" required>
+
+            <button id="btnlogin" class="card">Enviar</button>
+            <div id="loginMensagem" class="mensagem"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>©Desenvolvido por ICARO MORETTI</p>
+    </footer>
+
+<script>
+const fetchOriginal = window.fetch;
+window.fetch = async (...args) => {
+    const resposta = await fetchOriginal(...args);
+    if (String(args[0]).includes('/login') && resposta.ok) {
+        resposta.clone().json().then((dados) => {
+            if (dados.nome) localStorage.setItem('nomeUsuario', dados.nome);
+        });
+    }
+    return resposta;
+};
+</script>
+
+    <script>
+        const btnlogin = document.querySelector('#btnlogin');
+        const loginMensagem = document.querySelector('#loginMensagem');
+
+        btnlogin.addEventListener('click', async ()=>{
+          
+            const emailEntrada = document.querySelector('#loginEmail');
+            const senhaEntrada = document.querySelector('#loginSenha');
+
+            
+            const email = emailEntrada.value;
+            const senha = senhaEntrada.value;
+
+            if ( !email || !senha) {
+                loginMensagem.innerText = 'Preencha todos os campos antes de enviar!'
+                loginMensagem.style.color = 'red';
+                return;
+            }
+
+            loginMensagem.innerText = 'Dados enviados aguarde 5 segundos...';
+            loginMensagem.style.color = 'orange';
+
+            try{
+                const respostaBE = await fetch('/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        
+                        email: email,
+                        senha: senha
+                    })
+                });
+
+                const dados = await respostaBE.json();
+
+                if(!respostaBE.ok) {
+                    loginMensagem.innerText = `${dados.erro}`;
+                    loginMensagem.style.color = 'red';
+                    return;
+                }
+
+                loginMensagem.innerText = `${dados.mensagem}: ${dados.perfil}`;
+                loginMensagem.style.color = 'green';
+
+                
+                emailEntrada.value = '';
+                senhaEntrada.value = '';
+            }
+            catch(erro) {
+                console.error('Erro na requisição:', erro);
+                loginMensagem.innerText = 'Erro ao conectar com o servidor!!';
+                loginMensagem.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+
+</html>
